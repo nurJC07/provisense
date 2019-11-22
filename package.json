@@ -13,6 +13,7 @@
     "flag-icon-css": "^3.4.5",
     "font-awesome": "^4.7.0",
     "node-sass": "^4.13.0",
+    "query-string": "^6.9.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-redux": "^7.1.3",

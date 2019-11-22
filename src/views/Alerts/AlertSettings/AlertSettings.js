@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import queryString from 'query-string'
 import { connect } from 'react-redux';
 import { Redirect } from 'react-router-dom';
 import {API_URL} from '../../../supports/api-url/apiurl'
@@ -15,12 +16,11 @@ export class AlertSettings extends Component {
       parameterList: [],
       sensorList: [],
       severityList:[],
-      isActive: true,
+      isActive: false,
       isOpen: false,
       success: false,
-      alertDetailList: []
-      
-  
+      alertDetailList: [],
+      alertHistoryList: []
   }
    
       componentDidMount() {
@@ -77,6 +77,7 @@ export class AlertSettings extends Component {
     
     onBtnAddClick = () => {       
        var data = {
+        // alertID         : this.refs.AddAlertID.value,
         alertname       : this.refs.AddName.value,
         parametername   : this.refs.AddParameter.value,
         threshold       : this.refs.AddThreshold.value,
@@ -84,7 +85,7 @@ export class AlertSettings extends Component {
         sensorname      : this.refs.AddSensor.value,
         severityname    : this.refs.AddSeverity.value,
         send            : this.refs.AddSend.value ,
-        isActive        : this.refs.state
+        // isActive        : this.refs.state
 
        }
         
@@ -92,8 +93,9 @@ export class AlertSettings extends Component {
         axios.post(API_URL + '/alert/addalert', data)
         .then((res) => {
             alert("Add Alert was Successfull")
-            this.setState({ alertList: res.data })
-            
+           
+              this.getAlertList() 
+                          
         })
         .catch((err) =>{
             console.log(err)
@@ -102,11 +104,7 @@ export class AlertSettings extends Component {
        
     
     onBtnUpdateClick = (id) => {
-        var formData = new FormData()
-        var headers = {
-            headers: 
-            {'Content-Type': 'multipart/form-data'}
-        }
+      alert(id)
         var data = {
           alertname       : this.refs.EditName.value,
           parametername   : this.refs.EditParameter.value,
@@ -114,16 +112,16 @@ export class AlertSettings extends Component {
           value           : this.refs.EditValue.value,
           sensorname      : this.refs.EditSensor.value,
           severityname    : this.refs.EditSeverity.value,
-          send            : this.refs.EditSend.value ,
-          isActive        : this.refs.EditisActive.value
+          // isActive        : this.refs.state.value
   
          }
 
-        axios.put(API_URL + '/alert/editalert/'+id, formData, headers)
+        axios.put(API_URL + '/alert/editalert/'+id, data)
         .then((res) => {
             alert("Edit Alert Success")
-            this.setState({ alertList: res.data, 
+            this.setState({  
             selectedAlertId: 0 })
+            this.getAlertList() 
         })
         .catch((err) =>{
             console.log(err)
@@ -132,7 +130,7 @@ export class AlertSettings extends Component {
 
 
     onBtnDeleteClick = (id) => {
-        if(window.confirm('Are sure want to delete this item?')){
+        if(window.confirm('Are you sure want to delete this item?')){
             axios.delete(API_URL + '/alert/deletealert/' + id)
             .then((res) => {
                 this.getAlertList();
@@ -146,17 +144,18 @@ export class AlertSettings extends Component {
     renderAllParameter = () => {
       var listJSXAllParameter = this.state.parameterList.map((item) => {
         return (
-            <option key={item.id} value={item.id}>{item.parametername}</option>
+            <option key={item.id} value={item.parametername}>{item.parametername}</option>
         )
     })
     
       return listJSXAllParameter;
   }
 
+
   renderAllSeverity = () => {
     var listJSXAllSeverity = this.state.severityList.map((item) => {
       return (
-          <option key={item.id} value={item.id}>{item.severityname}</option>
+          <option key={item.id} value={item.severityname}>{item.severityname}</option>
       )
   })
   
@@ -166,42 +165,156 @@ export class AlertSettings extends Component {
     renderAllSensor = () => {
       var listJSXAllSensor = this.state.sensorList.map((item) => {
         return (
-            <option key={item.id} value={item.id}>{item.sensorname}</option>
+            <option key={item.id} value={item.sensorname}>{item.sensorname}</option>
         )
     })
 
   return listJSXAllSensor;
 }
 
+onBtnHistoryList = (alertID) => {
+
+  console.log(alertID)
+  axios.get(API_URL + `/alert/getlisthistoryalert/${alertID}`)
+  .then((res) => {
+  console.log(res.data)
+  this.setState({ 
+    alertHistoryList: res.data[0]})
+    window.location = `/#/alert/history?alert_id=${alertID}`;
+  }).catch((err) => {
+  console.log (err)
+  })
+}
+
+renderDetailAlertList = () => {
+  
+  var listJSXAlertDetail = this.state.alertDetailList.map((item) => {
+      return (
+        <div>
+        <Row>
+        <Col md="3">
+          <p>{item.alertID} </p>
+        </Col>
+        </Row>  
+        <Row>
+        <Col >
+          <p><strong>{item.alertname}</strong> </p>
+        </Col>  
+        </Row>  
+        <Row>
+        <Col md="6"> 
+          <Row>
+          <Col md="6"> <Label >Parameter  </Label></Col>        
+          <Col  md="6">
+          <Label >: {item.parametername} </Label> </Col>
+          </Row>
+        </Col>
+        <Col md="6">  
+          <Row>
+          <Col md="6">
+          <Label >Affected Sensor  </Label></Col>
+          <Col  md="6">
+          <Label >: {item.sensorname} </Label>
+          </Col>
+          </Row>
+        </Col>
+        </Row>
+        <Row>
+        <Col md="6"> 
+          <Row>
+          <Col md="6"> <Label >Threshold  </Label></Col>        
+          <Col  md="6">
+          <Label >: {item.threshold} </Label> </Col>
+          </Row>
+        </Col>
+        <Col md="6">  
+          <Row>
+          <Col md="6">
+          <Label >Value</Label></Col>
+          <Col  md="6">
+          <Label >: {item.value} </Label>
+          </Col>
+          </Row>
+        </Col>
+        </Row>
+        <Row>
+        <Col md="6"> 
+          <Row>
+          <Col md="6"> <Label >Severity</Label></Col>        
+          <Col  md="6">
+          <Label >: {item.severityname} </Label> </Col>
+          </Row>
+        </Col>
+        <Col md="6">  
+          <Row>
+          <Col md="6">
+          <Label >Send to</Label></Col>
+          <Col  md="6">
+          <Label >: {item.send} </Label>
+          </Col>
+          </Row>
+        </Col>
+        </Row>
+      <Button color="success" onClick={() => this.onBtnHistoryList(item.alertID)}>Check History</Button>{' '}
+        </div>
+      
+      )
+      
+  })
+  return listJSXAlertDetail;
+}
+
+onBtnDetailClick = (id) => {
+  console.log(id)
+  axios.get(API_URL + `/alert/alertdetail/${id}`)
+  .then((res) => {
+    console.log(res)
+    this.setState({
+      alertDetailList : res.data})
+      // this.getAlertList();
+  }).catch(err => {
+      console.log(err)
+  })
+} 
+
+
 
     renderAlertList = () => {
         var listJSX = this.state.alertList.map((item) => {
             if(item.id !== this.state.selectedAlertId) {
                 return (
-                    <tr key={item.id} > 
-            <td>{item.alertID} </td>      
-                        <td>{item.alertname}</td>
-                        <td>{item.parametername}</td>
-                        <td>{item.threshold}</td>
-                        <td>{item.value}</td>
-                        <td>{item.sensorname}</td>
-                        <td>{item.severityname}</td>
-                        <td><AppSwitch className={'mx-1'} variant={'3d'} color={'success'} checked outline={item.isActive}/></td>                      
-                        <td><input type="button" className="btn btn-primary" value="Edit" onClick={() => this.setState({ selectedCategoryId: item.id })} /></td>
-                        <td><input type="button" className="btn btn-danger" value="Remove" onClick={() => this.onBtnDeleteClick(item.id)} /></td>
-                    </tr>
+                  <tr key={item.id} onClick={() => this.onBtnDetailClick(item.id)} > 
+                    <td>{item.alertID}</td>     
+                      <td>{item.alertname}</td>
+                      <td >{item.parametername} </td>
+                      <td>{item.threshold}</td>
+                      <td>{item.value}</td>
+                      <td>{item.sensorname}</td>
+                      <td>{item.severityname}</td>
+                      <td><AppSwitch className={'mx-1'} variant={'3d'} color={'success'} checked outline={item.isActive}/></td>                      
+                      <td><input type="button" className="btn btn-primary" value="Edit" onClick={() => this.setState({ selectedAlertId: item.id })} /></td>
+                      <td><input type="button" className="btn btn-danger" value="Remove" onClick={() => this.onBtnDeleteClick(item.id)} /></td>
+                  </tr>
                 )
             }
             return (
                 <tr key={item.id}>
                     <td>{item.alertID}</td>
-                    <td><input type="text" ref="EditName" defaultValue={item.nama} /></td>
+                    <td><input type="text" ref="EditName" defaultValue={item.alertname} /></td>
+                    <td> <select  ref="EditParameter">
+                      <option value="">{item.parametername}</option>{this.renderAllParameter()}  
+                    </select></td>
+                    <td><input type="text" ref="EditThreshold" defaultValue={item.threshold} /></td>
                     <td><input type="text" ref="EditValue" defaultValue={item.value} /></td>
-                    <td><input type="text" ref="EditSensor" defaultValue={item.sensor} /></td>
-                    <td><input type="text" ref="EditSeverity" defaultValue={item.severity} /></td>
-                    <td><input type="text" ref="isActiveEdit" defaultValue={item.isActive} /></td>
+                    <td> <select  ref="EditParameter">
+                      <option value=""></option>{this.renderAllParameter()}  
+                    </select></td>
+                    <td> <select  ref="EditParameter">
+                      <option value="">Select Parameter</option>{this.renderAllParameter()}  
+                    </select></td>
+                    {/* <td><input type="text" ref="isActiveEdit" defaultValue={item.isActive} /></td> */}
                     
-                    <td><input type="button" className="btn btn-primary" value="Save" onClick={() => this.onBtnUpdateClick(item.id)} /></td>
+                    <td><input type="button" className="btn btn-primary" value="Save" onClick={() => this.onBtnUpdateClick(item.id)} /> <i className="fa fa-save fa-sm"></i></td>
                     <td><input type="button" className="btn btn-danger" value="Cancel" onClick={() => this.setState({selectedAlertId:0})} /></td>
                 </tr>
             )
@@ -218,7 +331,9 @@ export class AlertSettings extends Component {
                   <i className="fa fa-align-justify"></i> Alert Detail
                 </CardHeader>
                 <CardBody>
-               <p>Ini isinya Alert Detail</p>
+
+               {this.renderDetailAlertList()} 
+                
                 </CardBody>
                 </Card>
             </Col>
@@ -252,7 +367,7 @@ export class AlertSettings extends Component {
                   <nav>
                     <Pagination>
                     
-                    <Button color="success" onClick={(e)=>{this.setState({isOpen:true})}} className="mr-1">Add New Aler</Button>
+                    <Button color="success" onClick={(e)=>{this.setState({isOpen:true})}} className="mr-1">Add New Alert</Button>
                 <Modal isOpen={this.state.isOpen}  
                        className={'modal-success ' + this.props.className}>
                   <ModalHeader  
@@ -289,13 +404,15 @@ export class AlertSettings extends Component {
                     </Col>
                     <Col md="9">
                       <FormGroup check inline>
-                        <Input className="form-check-input" type="radio" ref="AddThreshold" name="inline-radios"  />
-                        <Label className="form-check-label" check htmlFor="inline-radio1">Upper</Label>
+                        <Input className="form-check-input" type="radio" ref="AddThreshold"   checked={this.state.threshold} />
+                        <Label className="form-check-label" >Upper</Label>
                       </FormGroup>
                       <FormGroup check inline>
-                        <input className="form-check-input" type="radio" ref="AddThreshold" name="inline-radios"  />
-                        <Label className="form-check-label" check htmlFor="inline-radio2">Lower</Label>
+                        <input className="form-check-input" type="radio" ref="AddThreshold" 
+                          checked={this.state.threshold}  />
+                        <Label className="form-check-label">Lower</Label>
                       </FormGroup>
+
                       
                     </Col>
                   </FormGroup>
@@ -304,7 +421,7 @@ export class AlertSettings extends Component {
                       <Label htmlFor="text-input">Value</Label>
                     </Col>
                     <Col xs="12" md="4">
-                      <input type="number" ref="AddValue"  name="text-input" placeholder="Please Enter Alert Name" /> 
+                      <input type="number" ref="AddValue"  name="text-input" defaultValue={0} /> 
                     </Col>
                     <Col md="3">
                     <FormText name="text-input"><i>Celcius</i></FormText>
