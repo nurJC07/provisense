@@ -20,6 +20,8 @@ export class AlertHistory extends Component {
 componentDidMount() {
   this.getAlertHistoryList();
   this.getAlertDetailHistoryList();
+  this.getlistCritical();
+  this.getlistWarning();
   }
 
   getAlertDetailHistoryList = () => {
@@ -64,7 +66,7 @@ componentDidMount() {
     }  
   
   getlistCritical= () => {
-    axios.get(API_URL + '/alert/getlistCritical')
+    axios.get(API_URL + '/alert/getlistcritical')
     .then((res) => {
       console.log(res.data)
       this.setState({ 

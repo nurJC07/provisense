@@ -11,7 +11,7 @@ export class AlertSettings extends Component {
       parameterList: [],
       sensorList: [],
       severityList:[],
-      isActive: true,
+      isActive: '',
       isOpen: false,
       success: false,
       alertDetailList: [],
@@ -36,7 +36,7 @@ export class AlertSettings extends Component {
           console.log(res.data[0])
           this.setState({ 
             alertList: res.data,
-            isActive:true
+            
           })
           }).catch((err) => {
           console.log (err)
@@ -46,7 +46,6 @@ export class AlertSettings extends Component {
       getParameterList = () => {
         axios.get(API_URL + '/alert/getlistparameter')
         .then((res) => {
-        console.log(res.data.parametername)
         this.setState({ 
             parameterList: res.data, 
             listAllParameter: res.data})
@@ -108,7 +107,7 @@ export class AlertSettings extends Component {
           limitValue      : this.refs.EditLimitValue.value,
           sensorname      : this.refs.EditSensor.value,
           severityname    : this.refs.EditSeverity.value,
-          isActive        : this.refs.EditActive.value
+          isActive        : this.state.value
          }
 
         axios.put(API_URL + '/alert/editalert/'+id, data)
@@ -251,7 +250,6 @@ onBtnDetailClick = (id) => {
     console.log(res)
     this.setState({
       alertDetailList : res.data})
-      // this.getAlertList();
   }).catch(err => {
       console.log(err)
   })
@@ -269,7 +267,7 @@ onBtnDetailClick = (id) => {
                       <td>{item.limitValue}</td>
                       <td>{item.sensorname}</td>
                       <td>{item.severityname}</td>
-                      <td><AppSwitch className={'mx-1'} variant={'pill'} color={'success'} label checked /></td>                  
+                      <td><AppSwitch className={'mx-1'} variant={'pill'} color={'success'} label checked /></td>     
                       <td><i className="text-primay text-center icon-pencil icons font-3xl d-block" title="edit" onClick={() => this.setState({ selectedAlertId: item.id })}></i></td>
                       <td><i className="text-danger text-center icon-trash icons font-3xl d-block" title="delete" onClick={() => this.onBtnDeleteClick(item.id)}></i></td>
                   </tr>
@@ -290,7 +288,8 @@ onBtnDetailClick = (id) => {
                     <td> <select  ref="EditSeverity">
                       <option defaultValue="">{item.severityname}</option>{this.renderAllSeverity()}  
                     </select></td>
-                    <td><AppSwitch className={'mx-1'} variant={'pill'} color={'danger'}   onClick  ={(e)=>{this.setState({isActive:false})}}/></td> 
+                    <td><AppSwitch className={'mx-1'} variant={'pill'} color={'danger'}   
+                    onClick = {(e)=>this.setState({isActive:e.target.value})}   checked/></td> 
                     
                     <td></td>
                     <td><i className="text-success text-center icon-envelope icons font-3xl d-block" title="Save"  onClick={() => this.onBtnUpdateClick(item.id)}></i></td>
